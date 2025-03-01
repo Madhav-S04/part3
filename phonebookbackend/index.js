@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 // Serve static files from the "dist" directory
@@ -9,8 +10,8 @@ app.use(cors()); // Enable CORS for all routes
 
 // Serve frontend for unknown routes
 app.get('*', (req, res) => {
-  res.sendFile(__dirname + '/dist/index.html');
-});
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
 app.use(express.json()); // Middleware to parse JSON
 
 // Custom Morgan token to log request body for POST requests

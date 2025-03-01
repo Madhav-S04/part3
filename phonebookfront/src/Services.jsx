@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const baseUrl = 'https://part3-er3c.onrender.com/api/persons'; 
+//const baseUrl = 'https://part3-er3c.onrender.com/api/persons'; 
+const baseUrl = '/api/persons'; // Relative path
 
 //const baseUrl = 'http://localhost:3001/api/persons'; // Update to backend URL
 
