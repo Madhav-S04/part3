@@ -2,7 +2,13 @@ const express = require('express');
 const morgan = require('morgan');
 
 const app = express();
+// Serve static files from the "dist" directory
+app.use(express.static('dist'));
 
+// Serve frontend for unknown routes
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + '/dist/index.html');
+});
 app.use(express.json()); // Middleware to parse JSON
 
 // Custom Morgan token to log request body for POST requests
