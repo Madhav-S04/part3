@@ -1,9 +1,11 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 
 const app = express();
 // Serve static files from the "dist" directory
 app.use(express.static('dist'));
+app.use(cors()); // Enable CORS for all routes
 
 // Serve frontend for unknown routes
 app.get('*', (req, res) => {
