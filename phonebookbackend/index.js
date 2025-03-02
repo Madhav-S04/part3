@@ -4,8 +4,21 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON
 
+// ✅ Middleware (Applied before routes)
+app.use(express.json()); // Middleware to parse JSON
+app.use(cors()); // Enable CORS for all routes
+
+// ✅ Custom Morgan token to log request body for POST requests
+morgan.token('post-data', (req) => {
+    return req.method === 'POST' ? JSON.stringify(req.body) : '';
+});
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-data'));
+
+// ✅ Serve frontend from "dist"
+app.use(express.static('dist'));
+
+// ✅ Phonebook data
 let persons = [
     { id: "1", name: "Arto Hellas", number: "040-123456" },
     { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
@@ -13,43 +26,9 @@ let persons = [
     { id: "4", name: "Mary Poppendieck", number: "39-23-6423122" }
 ];
 
+// ✅ API Routes
 app.get('/api/persons', (req, res) => {
     res.json(persons);
-});
-
-
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-// Serve static files from the "dist" directory
-app.use(express.static('dist'));
-app.use(cors()); // Enable CORS for all routes
-
-// Serve frontend for unknown routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-
-// Custom Morgan token to log request body for POST requests
-morgan.token('post-data', (req) => {
-    return req.method === 'POST' ? JSON.stringify(req.body) : '';
-});
-
-// Use Morgan with the custom token
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-data'));
-
-
-app.get('/info', (req, res) => {
-    const totalEntries = persons.length;
-    const currentTime = new Date().toString();
-
-    res.send(`
-        <h1>Phonebook Info</h1>
-        <p>Phonebook has info for ${totalEntries} people</p>
-        <p>${currentTime}</p>
-    `);
 });
 
 app.get('/api/persons/:id', (req, res) => {
@@ -63,6 +42,7 @@ app.get('/api/persons/:id', (req, res) => {
     }
 });
 
+// ✅ DELETE a person
 app.delete('/api/persons/:id', (req, res) => {
     const id = req.params.id;
     const initialLength = persons.length;
@@ -76,12 +56,12 @@ app.delete('/api/persons/:id', (req, res) => {
     }
 });
 
-// Helper function to generate a unique ID
+// ✅ Helper function to generate a unique ID
 const generateId = () => {
     return Math.floor(Math.random() * 1000000).toString(); // Large enough to avoid duplicates
 };
 
-// POST route to add a new person with error handling
+// ✅ POST: Add new person with error handling
 app.post('/api/persons', (req, res) => {
     const { name, number } = req.body;
 
@@ -105,3 +85,25 @@ app.post('/api/persons', (req, res) => {
     res.status(201).json(newPerson); // Return the created person with 201 status
 });
 
+// ✅ INFO Route
+app.get('/info', (req, res) => {
+    const totalEntries = persons.length;
+    const currentTime = new Date().toString();
+
+    res.send(`
+        <h1>Phonebook Info</h1>
+        <p>Phonebook has info for ${totalEntries} people</p>
+        <p>${currentTime}</p>
+    `);
+});
+
+// ✅ Catch-all for serving frontend (must be LAST)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// ✅ Start the server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
