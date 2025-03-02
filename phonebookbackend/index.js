@@ -99,7 +99,7 @@ app.get('/info', (req, res) => {
 
 // ✅ Catch-all for serving frontend (must be LAST)
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
 });
 
 // ✅ Start the server
