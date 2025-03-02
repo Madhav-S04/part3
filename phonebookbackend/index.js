@@ -4,6 +4,25 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
+app.use(express.json()); // Middleware to parse JSON
+
+let persons = [
+    { id: "1", name: "Arto Hellas", number: "040-123456" },
+    { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
+    { id: "3", name: "Dan Abramov", number: "12-43-234345" },
+    { id: "4", name: "Mary Poppendieck", number: "39-23-6423122" }
+];
+
+app.get('/api/persons', (req, res) => {
+    res.json(persons);
+});
+
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 // Serve static files from the "dist" directory
 app.use(express.static('dist'));
 app.use(cors()); // Enable CORS for all routes
@@ -12,7 +31,6 @@ app.use(cors()); // Enable CORS for all routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   });
-app.use(express.json()); // Middleware to parse JSON
 
 // Custom Morgan token to log request body for POST requests
 morgan.token('post-data', (req) => {
@@ -22,16 +40,6 @@ morgan.token('post-data', (req) => {
 // Use Morgan with the custom token
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post-data'));
 
-let persons = [
-    { id: "1", name: "Arto Hellas", number: "040-123456" },
-    { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
-    { id: "3", name: "Dan Abramov", number: "12-43-234345" },
-    { id: "4", name: "Mary Poppendieck", number: "39-23-6423122" },
-];
-
-app.get('/api/persons', (req, res) => {
-    res.json(persons);
-});
 
 app.get('/info', (req, res) => {
     const totalEntries = persons.length;
@@ -97,7 +105,3 @@ app.post('/api/persons', (req, res) => {
     res.status(201).json(newPerson); // Return the created person with 201 status
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
