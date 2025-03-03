@@ -21,17 +21,14 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :p
 app.use(express.static('dist'));
 
 // ✅ Fetch all persons from MongoDB
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
     Person.find({})
         .then(persons => res.json(persons))
-        .catch(error => {
-            console.error('Error fetching persons:', error);
-            res.status(500).json({ error: 'Failed to fetch persons' });
-        });
+        .catch(error => next(error)); // Forward error to middleware
 });
 
 // ✅ Fetch a single person by ID
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     Person.findById(req.params.id)
         .then(person => {
             if (person) {
@@ -40,14 +37,11 @@ app.get('/api/persons/:id', (req, res) => {
                 res.status(404).json({ error: 'Person not found' });
             }
         })
-        .catch(error => {
-            console.error('Error fetching person:', error);
-            res.status(400).json({ error: 'Invalid ID format' });
-        });
+        .catch(error => next(error)); // Forward error
 });
 
-// ✅ DELETE a person (Updated version)
-app.delete('/api/persons/:id', (req, res) => {
+// ✅ DELETE a person
+app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
         .then(result => {
             if (result) {
@@ -56,14 +50,11 @@ app.delete('/api/persons/:id', (req, res) => {
                 res.status(404).json({ error: 'Person not found' });
             }
         })
-        .catch(error => {
-            console.error('Error deleting person:', error);
-            res.status(500).json({ error: 'Failed to delete person' });
-        });
+        .catch(error => next(error)); // Forward error
 });
 
 // ✅ POST: Add new person to MongoDB
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const { name, number } = req.body;
 
     if (!name || !number) {
@@ -74,14 +65,11 @@ app.post('/api/persons', (req, res) => {
 
     person.save()
         .then(savedPerson => res.json(savedPerson))
-        .catch(error => {
-            console.error('Error saving person:', error);
-            res.status(500).json({ error: 'Failed to save person' });
-        });
+        .catch(error => next(error)); // Forward error
 });
 
 // ✅ INFO Route
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
     Person.countDocuments({})
         .then(count => {
             const currentTime = new Date().toString();
@@ -91,15 +79,23 @@ app.get('/info', (req, res) => {
                 <p>${currentTime}</p>
             `);
         })
-        .catch(error => {
-            console.error('Error fetching person count:', error);
-            res.status(500).json({ error: 'Failed to fetch person count' });
-        });
+        .catch(error => next(error)); // Forward error
 });
 
-// ✅ Catch-all for serving frontend (must be LAST)
-app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+// ✅ Middleware: Handle unknown endpoints
+app.use((req, res) => {
+    res.status(404).json({ error: 'Unknown endpoint' });
+});
+
+// ✅ Error Handler Middleware
+app.use((error, req, res, next) => {
+    console.error('❌ Error:', error.message);
+
+    if (error.name === 'CastError') {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+
+    res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
 // ✅ Start the server
