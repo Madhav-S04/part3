@@ -19,6 +19,29 @@ app.get('/api/persons', (req, res) => {
       });
   });
   
+  app.post('/api/persons', (req, res) => {
+    const body = req.body;
+  
+    if (!body.name || !body.number) {
+      return res.status(400).json({ error: 'Name or number is missing' });
+    }
+  
+    const person = new Person({
+      name: body.name,
+      number: body.number,
+    });
+  
+    person
+      .save()
+      .then(savedPerson => {
+        res.json(savedPerson);
+      })
+      .catch(error => {
+        console.error('Error saving person:', error);
+        res.status(500).json({ error: 'Failed to save person' });
+      });
+  });
+  
 // ✅ Middleware (Applied before routes)
 app.use(express.json()); // Middleware to parse JSON
 app.use(cors()); // Enable CORS for all routes
