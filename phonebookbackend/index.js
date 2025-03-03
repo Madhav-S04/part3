@@ -23,9 +23,7 @@ app.use(express.static('dist'));
 // ✅ Fetch all persons from MongoDB
 app.get('/api/persons', (req, res) => {
     Person.find({})
-        .then(persons => {
-            res.json(persons);
-        })
+        .then(persons => res.json(persons))
         .catch(error => {
             console.error('Error fetching persons:', error);
             res.status(500).json({ error: 'Failed to fetch persons' });
@@ -39,7 +37,7 @@ app.get('/api/persons/:id', (req, res) => {
             if (person) {
                 res.json(person);
             } else {
-                res.status(404).json({ error: "Person not found" });
+                res.status(404).json({ error: 'Person not found' });
             }
         })
         .catch(error => {
@@ -48,19 +46,19 @@ app.get('/api/persons/:id', (req, res) => {
         });
 });
 
-// ✅ DELETE a person
+// ✅ DELETE a person (Updated version)
 app.delete('/api/persons/:id', (req, res) => {
     Person.findByIdAndDelete(req.params.id)
         .then(result => {
             if (result) {
                 res.status(204).end();
             } else {
-                res.status(404).json({ error: "Person not found" });
+                res.status(404).json({ error: 'Person not found' });
             }
         })
         .catch(error => {
             console.error('Error deleting person:', error);
-            res.status(400).json({ error: 'Invalid ID format' });
+            res.status(500).json({ error: 'Failed to delete person' });
         });
 });
 
@@ -75,9 +73,7 @@ app.post('/api/persons', (req, res) => {
     const person = new Person({ name, number });
 
     person.save()
-        .then(savedPerson => {
-            res.json(savedPerson);
-        })
+        .then(savedPerson => res.json(savedPerson))
         .catch(error => {
             console.error('Error saving person:', error);
             res.status(500).json({ error: 'Failed to save person' });
