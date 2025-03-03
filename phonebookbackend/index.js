@@ -68,6 +68,31 @@ app.post('/api/persons', (req, res, next) => {
         .catch(error => next(error)); // Forward error
 });
 
+// ✅ PUT: Update phone number of an existing person
+app.put('/api/persons/:id', (req, res, next) => {
+    const { name, number } = req.body;
+
+    if (!number) {
+        return res.status(400).json({ error: 'Number is missing' });
+    }
+
+    const updatedPerson = { name, number };
+
+    Person.findByIdAndUpdate(
+        req.params.id,
+        updatedPerson,
+        { new: true, runValidators: true, context: 'query' } // Return updated person & apply validation
+    )
+        .then(updatedEntry => {
+            if (updatedEntry) {
+                res.json(updatedEntry);
+            } else {
+                res.status(404).json({ error: 'Person not found' });
+            }
+        })
+        .catch(error => next(error)); // Forward error
+});
+
 // ✅ INFO Route
 app.get('/info', (req, res, next) => {
     Person.countDocuments({})
