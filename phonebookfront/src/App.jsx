@@ -1,50 +1,79 @@
 import { useState, useEffect } from 'react';
-import phonebookService from './Services';
+import personService from './services/persons';
 import Filter from './Filter';
 import PersonForm from './PersonForm';
 import Persons from './Persons';
+import Notification from './Notification';
 
 const App = () => {
-  const [persons, setPersons] = useState([ { id: "1", name: "Arto Hellas", number: "040-123456" },
-    { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
-    { id: "3", name: "Dan Abramov", number: "12-43-234345" },
-    { id: "4", name: "Mary Poppendieck", number: "39-23-6423122" },]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [notification, setNotification] = useState(null); // ✅ Notification state
 
+  // Fetch initial contacts from backend
   useEffect(() => {
-    phonebookService.getAll().then(initialPersons => {
+    personService.getAll().then(initialPersons => {
       setPersons(initialPersons);
     });
   }, []);
 
+  // ✅ Function to add a person with validation handling
   const addPerson = (event) => {
     event.preventDefault();
+    const existingPerson = persons.find(person => person.name === newName);
 
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to the phonebook!`);
+    if (existingPerson) {
+      if (window.confirm(`${newName} is already in the phonebook, replace the old number?`)) {
+        personService
+          .update(existingPerson.id, { name: newName, number: newNumber })
+          .then(updatedPerson => {
+            setPersons(persons.map(p => (p.id !== existingPerson.id ? p : updatedPerson)));
+            setNotification({ message: `Updated ${updatedPerson.name}`, type: 'success' });
+          })
+          .catch(error => {
+            setNotification({ message: error.response?.data?.error || 'Error updating contact', type: 'error' });
+          })
+          .finally(() => {
+            setTimeout(() => setNotification(null), 5000);
+          });
+      }
       return;
     }
 
     const newPerson = { name: newName, number: newNumber };
 
-    phonebookService.create(newPerson).then(returnedPerson => {
-      setPersons([...persons, returnedPerson]);
-      setNewName('');
-      setNewNumber('');
-    });
+    personService
+      .create(newPerson)
+      .then(returnedPerson => {
+        setPersons([...persons, returnedPerson]);
+        setNewName('');
+        setNewNumber('');
+        setNotification({ message: `Added ${returnedPerson.name}`, type: 'success' });
+      })
+      .catch(error => {
+        setNotification({ message: error.response?.data?.error || 'Failed to add contact', type: 'error' });
+      })
+      .finally(() => {
+        setTimeout(() => setNotification(null), 5000);
+      });
   };
 
-  // Function to delete a contact
+  // ✅ Function to delete a contact
   const deletePerson = (id, name) => {
     if (window.confirm(`Delete ${name}?`)) {
-      phonebookService.remove(id)
+      personService.remove(id)
         .then(() => {
           setPersons(persons.filter(person => person.id !== id));
+          setNotification({ message: `Deleted ${name}`, type: 'success' });
         })
         .catch(error => {
-          console.error('Error deleting person:', error);
+          setNotification({ message: `Error: ${name} was already removed from the server`, type: 'error' });
+          setPersons(persons.filter(person => person.id !== id)); // Remove from UI
+        })
+        .finally(() => {
+          setTimeout(() => setNotification(null), 5000);
         });
     }
   };
@@ -59,10 +88,11 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
 
+      <Notification notification={notification} /> {/* ✅ Display messages */}
+
       <Filter searchTerm={searchTerm} onSearchChange={handleSearchChange} />
 
       <h3>Add a new</h3>
-
       <PersonForm
         newName={newName}
         newNumber={newNumber}
@@ -72,7 +102,6 @@ const App = () => {
       />
 
       <h3>Numbers</h3>
-
       <Persons filteredPersons={filteredPersons} onDelete={deletePerson} />
     </div>
   );

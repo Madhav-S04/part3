@@ -76,16 +76,14 @@ app.put('/api/persons/:id', (req, res, next) => {
         return res.status(400).json({ error: 'Number is missing' });
     }
 
-    const updatedPerson = { name, number };
-
     Person.findByIdAndUpdate(
         req.params.id,
-        updatedPerson,
-        { new: true, runValidators: true, context: 'query' } // Return updated person & apply validation
+        { name, number },
+        { new: true, runValidators: true, context: 'query' } // ✅ Enforce validation
     )
-        .then(updatedEntry => {
-            if (updatedEntry) {
-                res.json(updatedEntry);
+        .then(updatedPerson => {
+            if (updatedPerson) {
+                res.json(updatedPerson);
             } else {
                 res.status(404).json({ error: 'Person not found' });
             }
@@ -118,6 +116,8 @@ app.use((error, req, res, next) => {
 
     if (error.name === 'CastError') {
         return res.status(400).json({ error: 'Invalid ID format' });
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message }); // ✅ Send detailed validation error
     }
 
     res.status(500).json({ error: 'Something went wrong on the server' });
