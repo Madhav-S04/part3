@@ -2,8 +2,10 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
+const Person = require('./model'); // Import Mongoose model
 
 const app = express();
+require('dotenv').config(); // Load environment variables from .env
 
 // ✅ Middleware (Applied before routes)
 app.use(express.json()); // Middleware to parse JSON
