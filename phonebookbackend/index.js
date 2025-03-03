@@ -7,6 +7,18 @@ const Person = require('./model'); // Import Mongoose model
 const app = express();
 require('dotenv').config(); // Load environment variables from .env
 
+// Fetch all persons from MongoDB
+app.get('/api/persons', (req, res) => {
+    Person.find({})
+      .then(persons => {
+        res.json(persons);
+      })
+      .catch(error => {
+        console.error('Error fetching persons:', error);
+        res.status(500).json({ error: 'Failed to fetch persons' });
+      });
+  });
+  
 // ✅ Middleware (Applied before routes)
 app.use(express.json()); // Middleware to parse JSON
 app.use(cors()); // Enable CORS for all routes
