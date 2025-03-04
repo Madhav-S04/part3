@@ -22,10 +22,7 @@ const personSchema = new mongoose.Schema({
     validate: phoneValidator, // ✅ Apply custom validation
   },
 });
-const url = process.env.MONGODB_URI;
 
-mongoose.set('strictQuery', false);
-mongoose.connect(url);
 // Convert MongoDB `_id` field to `id` and remove `__v`
 personSchema.set('toJSON', {
   transform: (document, returnedObject) => {
